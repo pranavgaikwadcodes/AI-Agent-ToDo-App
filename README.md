@@ -166,10 +166,30 @@ pnpm cli
 ```
 
 ```
+  Todo Assistant  — type "exit" to quit
+
 >> add buy milk
+  ✓  Created todo #21
+
+  AI  Done! "buy milk" has been added to your list.
+
 >> show my todos
->> mark todo 1 as completed
+
+  ✓  #18   buy eggs
+  ○  #21   buy milk
+
+  2 total · 1 completed · 1 pending
+
+  AI  You have 2 todos — 1 still pending.
+
+>> mark 21 as completed
+  ✓  Updated #21 → completed
+
+  AI  Got it! Todo #21 is now marked as completed.
+
 >> exit
+
+  Goodbye!
 ```
 
 ---
@@ -180,9 +200,11 @@ The agent uses a **JSON-based tool-calling loop**:
 
 1. User sends a message
 2. LLM responds with either `{"action": "functionName", "input": "..."}` or `{"response": "..."}`
-3. If it's an action, the server calls the matching database function and feeds the result back to the LLM
-4. The loop continues until the LLM produces a `response`
-5. Final response is returned to the frontend and saved to the database
+3. If it's an action, the matching database function is called
+4. The result is fed back to the LLM, which then produces a `{"response": "..."}` summary
+5. Final response is returned to the user / frontend and saved to the database
+
+**CLI** additionally makes a lightweight second LLM call after each function to generate a one-line natural-language summary, displayed beneath the formatted result.
 
 This pattern lets a small local model (3B parameters) reliably perform structured database operations from natural language.
 
