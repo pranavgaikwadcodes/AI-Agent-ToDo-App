@@ -9,7 +9,7 @@
 
   /* Prevent flash on load */
   html {
-    background-color: #f9fafb;
+    background-color: #ffffff;
   }
   html.dark {
     background-color: #09090b;

@@ -89,9 +89,9 @@ export default function ChatWindow({ messages, loading, onSend }) {
   }
 
   return (
-    <main className="flex flex-col flex-1 min-w-0 bg-gray-50 dark:bg-zinc-950 overflow-hidden">
+    <div className="flex flex-col flex-1 min-w-0 bg-white dark:bg-zinc-950 overflow-hidden">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto py-4">
+      <div className="flex-1 overflow-y-auto py-4 bg-white dark:bg-zinc-950">
         {messages.length === 0 && !loading ? (
           <div className="flex flex-col items-center justify-center h-full gap-6 px-6 text-center">
             <div>
@@ -133,7 +133,7 @@ export default function ChatWindow({ messages, loading, onSend }) {
       </div>
 
       {/* Input bar */}
-      <div className="p-4 flex-shrink-0">
+      <div className="p-4 flex-shrink-0 bg-white dark:bg-zinc-950">
         <form
           onSubmit={e => { e.preventDefault(); submit() }}
           className="flex items-end gap-2.5"
@@ -163,6 +163,6 @@ export default function ChatWindow({ messages, loading, onSend }) {
           ↵ Send &nbsp;·&nbsp; Shift+↵ New line
         </p>
       </div>
-    </main>
+    </div>
   )
 }
