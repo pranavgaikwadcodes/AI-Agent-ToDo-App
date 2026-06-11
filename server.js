@@ -76,6 +76,19 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
+app.post('/api/todos', async (req, res) => {
+    try {
+        const { todo } = req.body;
+        if (!todo?.trim()) return res.status(400).json({ error: 'todo text is required' });
+        const [result] = await db.insert(todosTable)
+            .values({ todo: todo.trim(), status: 'pending' })
+            .returning();
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.patch('/api/todos/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id);
