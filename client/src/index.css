@@ -7,23 +7,29 @@
     height: 100%;
   }
 
+  /* Prevent flash on load */
+  html {
+    background-color: #f9fafb;
+  }
+  html.dark {
+    background-color: #09090b;
+  }
+
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Thin custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 4px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
+  /* Scrollbar — light */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: #27272a;
+    background: #d4d4d8;
     border-radius: 2px;
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #3f3f46;
-  }
+  ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+
+  /* Scrollbar — dark */
+  html.dark ::-webkit-scrollbar-thumb { background: #27272a; }
+  html.dark ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
 }

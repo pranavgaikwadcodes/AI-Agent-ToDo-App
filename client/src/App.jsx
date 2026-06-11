@@ -13,12 +13,28 @@ function getSessionId() {
   return id
 }
 
+function getInitialTheme() {
+  const saved = localStorage.getItem('theme')
+  if (saved) return saved === 'dark'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
 export default function App() {
   const [sessionId] = useState(getSessionId)
   const [messages, setMessages] = useState([])
   const [todos, setTodos] = useState([])
   const [loading, setLoading] = useState(false)
   const [connected, setConnected] = useState(null)
+  const [isDark, setIsDark] = useState(getInitialTheme)
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+    localStorage.setItem('theme', isDark ? 'dark' : 'light')
+  }, [isDark])
 
   useEffect(() => {
     loadMessages()
@@ -77,7 +93,7 @@ export default function App() {
         },
       ])
       loadTodos()
-    } catch (err) {
+    } catch {
       setMessages(prev => [
         ...prev,
         {
@@ -103,8 +119,13 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-zinc-950 overflow-hidden">
-      <Header connected={connected} onClearChat={clearChat} />
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-zinc-950 overflow-hidden">
+      <Header
+        connected={connected}
+        isDark={isDark}
+        onToggleTheme={() => setIsDark(d => !d)}
+        onClearChat={clearChat}
+      />
       <div className="flex flex-1 min-h-0">
         <TodoSidebar todos={todos} />
         <ChatWindow messages={messages} loading={loading} onSend={sendMessage} />
