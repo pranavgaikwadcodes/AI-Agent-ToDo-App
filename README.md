@@ -2,7 +2,7 @@
 
 A full-stack AI-powered todo manager that lets you manage tasks through natural language conversation. Built with a local LLM (Ollama), Node.js, PostgreSQL, and React.
 
-![Tech Stack](https://img.shields.io/badge/Node.js-Express-green) ![React](https://img.shields.io/badge/Frontend-React-blue) ![Ollama](https://img.shields.io/badge/AI-Ollama%20%7C%20qwen2.5-orange) ![PostgreSQL](https://img.shields.io/badge/DB-PostgreSQL-blue)
+![Tech Stack](https://img.shields.io/badge/Node.js-Express-green) ![React](https://img.shields.io/badge/Frontend-React-blue) ![Ollama](https://img.shields.io/badge/AI-Ollama%20%7C%20qwen2.5-orange) ![PostgreSQL](https://img.shields.io/badge/DB-PostgreSQL-blue) ![Docker](https://img.shields.io/badge/Infra-Docker-2496ED)
 
 ---
 
@@ -26,8 +26,8 @@ The AI figures out what you mean, calls the right database function, and respond
 | Layer | Tech |
 |---|---|
 | AI / LLM | [Ollama](https://ollama.com) running `qwen2.5:3b` locally |
-| Backend | Node.js + Express |
-| Database | PostgreSQL (via Docker) + Drizzle ORM |
+| Backend | Node.js + Express (containerised via Docker) |
+| Database | PostgreSQL (Docker) + Drizzle ORM |
 | Frontend | React + Vite + Tailwind CSS |
 
 Everything runs **100% locally** — no OpenAI API key, no cloud, no data leaves your machine.
@@ -38,21 +38,22 @@ Everything runs **100% locally** — no OpenAI API key, no cloud, no data leaves
 
 ```
 AI-ToDo-App/
-├── index.js          # Original CLI interface (still works)
-├── agent.js          # AI agent logic (shared between CLI and API)
-├── server.js         # Express API server
+├── index.js            # Original CLI interface (still works)
+├── agent.js            # AI agent logic (shared between CLI and API)
+├── server.js           # Express API server (auto-runs migrations on start)
+├── Dockerfile          # Backend container definition
+├── docker-compose.yaml # Postgres + backend services
 ├── db/
-│   ├── index.js      # Database connection
-│   └── schema.js     # Drizzle schema (todos + messages tables)
-├── drizzle/          # Auto-generated migrations
-├── client/           # React frontend (Vite + Tailwind)
+│   ├── index.js        # Database connection
+│   └── schema.js       # Drizzle schema (todos + messages tables)
+├── drizzle/            # Auto-generated migration SQL files
+├── client/             # React frontend (Vite + Tailwind)
 │   └── src/
 │       ├── App.jsx
 │       └── components/
 │           ├── Header.jsx
 │           ├── ChatWindow.jsx
 │           └── TodoSidebar.jsx
-├── docker-compose.yaml
 └── .env
 ```
 
@@ -64,8 +65,8 @@ AI-ToDo-App/
 
 - [Node.js](https://nodejs.org) v18+
 - [pnpm](https://pnpm.io) — `npm install -g pnpm`
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for PostgreSQL)
-- [Ollama](https://ollama.com/download) (for the local LLM)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (runs Postgres + backend API)
+- [Ollama](https://ollama.com/download) (runs the local LLM on your machine)
 
 ---
 
@@ -96,56 +97,38 @@ ollama serve
 cp .env.example .env
 ```
 
-The default `.env` works out of the box with the provided Docker config:
+The default `.env` is used for local/CLI development. Docker uses its own env vars defined in `docker-compose.yaml`.
 
 ```env
 DATABASE_URL=postgresql://admin:admin@localhost:5432/postgres
 ```
 
-### 4. Start the database
-
-Make sure Docker Desktop is running, then:
+### 4. Install frontend dependencies
 
 ```bash
-docker compose up -d
-```
-
-### 5. Install dependencies
-
-```bash
-# Root (backend)
-pnpm install
-
-# Frontend
 cd client && npm install && cd ..
 ```
-
-### 6. Run database migrations
-
-```bash
-pnpm migrate
-```
-
-This creates the `todos` and `messages` tables.
 
 ---
 
 ## Running the App
 
-You need **three things running**: Ollama, the Express server, and the React dev server.
+You need **two things running**: Docker (Postgres + backend) and the React dev server.
 
-**Terminal 1 — Ollama** (skip if already running):
+**Step 1 — Start Ollama** (skip if already running):
 ```bash
 ollama serve
 ```
 
-**Terminal 2 — Backend API:**
+**Step 2 — Start Postgres + backend via Docker:**
 ```bash
-pnpm server
-# Running at http://localhost:3001
+docker compose up --build
+# Postgres running at localhost:5432
+# Backend API running at http://localhost:3001
+# Migrations are applied automatically on startup
 ```
 
-**Terminal 3 — Frontend:**
+**Step 3 — Start the frontend** (separate terminal):
 ```bash
 cd client
 npm run dev
@@ -154,16 +137,18 @@ npm run dev
 
 Open **http://localhost:5173** in your browser.
 
+> **Note:** On the first run, `--build` compiles the Docker image. After that you can use `docker compose up` (without `--build`) for faster startup.
+
 ---
 
 ## Production Build
 
-Build the React app and serve everything from a single port:
+Build the React app and serve everything from a single Express server:
 
 ```bash
 cd client && npm run build && cd ..
-pnpm server
-# App + API at http://localhost:3001
+docker compose up --build
+# App + API served at http://localhost:3001
 ```
 
 ---
@@ -173,6 +158,10 @@ pnpm server
 The original terminal interface still works if you prefer it:
 
 ```bash
+# Make sure Postgres is running first
+docker compose up -d postgres
+
+pnpm install
 pnpm cli
 ```
 
@@ -225,10 +214,11 @@ This pattern lets a small local model (3B parameters) reliably perform structure
 
 | Command | Description |
 |---|---|
-| `pnpm server` | Start the Express API server |
-| `pnpm cli` | Run the original CLI interface |
-| `pnpm generate` | Generate a new Drizzle migration |
-| `pnpm migrate` | Apply pending migrations |
-| `pnpm studio` | Open Drizzle Studio (DB GUI) |
+| `docker compose up --build` | Build and start Postgres + backend API |
+| `docker compose up -d postgres` | Start only Postgres (for CLI mode) |
 | `cd client && npm run dev` | Start the React dev server |
 | `cd client && npm run build` | Build React for production |
+| `pnpm cli` | Run the original CLI interface |
+| `pnpm generate` | Generate a new Drizzle migration file |
+| `pnpm migrate` | Apply migrations manually (optional — runs automatically via Docker) |
+| `pnpm studio` | Open Drizzle Studio (DB browser GUI) |
