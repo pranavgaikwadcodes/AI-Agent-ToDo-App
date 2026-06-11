@@ -4,7 +4,7 @@ import { todosTable } from "./db/schema.js";
 import { eq, ilike } from "drizzle-orm";
 
 const client = new OpenAI({
-    baseURL: 'http://localhost:11434/v1',
+    baseURL: process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1',
     apiKey: 'ollama',
 });
 

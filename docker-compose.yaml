@@ -10,6 +10,24 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    container_name: backend
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres:5432/postgres
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+      - PORT=3001
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:

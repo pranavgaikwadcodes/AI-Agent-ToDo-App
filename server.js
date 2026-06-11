@@ -6,6 +6,7 @@ import { dirname, join } from 'path';
 import { db } from './db/index.js';
 import { todosTable, messagesTable } from './db/schema.js';
 import { eq, asc } from 'drizzle-orm';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { runAgent } from './agent.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -90,6 +91,9 @@ app.use(express.static(distPath));
 app.get('*', (_req, res) => {
     res.sendFile(join(distPath, 'index.html'));
 });
+
+await migrate(db, { migrationsFolder: './drizzle' });
+console.log('Database migrations applied');
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
