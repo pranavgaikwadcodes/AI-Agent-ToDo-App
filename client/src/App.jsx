@@ -1,0 +1,114 @@
+import { useState, useEffect } from 'react'
+import Header from './components/Header'
+import TodoSidebar from './components/TodoSidebar'
+import ChatWindow from './components/ChatWindow'
+
+function getSessionId() {
+  const key = 'ai-todo-session'
+  let id = localStorage.getItem(key)
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem(key, id)
+  }
+  return id
+}
+
+export default function App() {
+  const [sessionId] = useState(getSessionId)
+  const [messages, setMessages] = useState([])
+  const [todos, setTodos] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [connected, setConnected] = useState(null)
+
+  useEffect(() => {
+    loadMessages()
+    loadTodos()
+  }, [])
+
+  async function loadMessages() {
+    try {
+      const res = await fetch(`/api/messages/${sessionId}`)
+      if (!res.ok) throw new Error()
+      setMessages(await res.json())
+      setConnected(true)
+    } catch {
+      setConnected(false)
+    }
+  }
+
+  async function loadTodos() {
+    try {
+      const res = await fetch('/api/todos')
+      if (!res.ok) throw new Error()
+      setTodos(await res.json())
+    } catch {
+      // silent — sidebar just stays empty
+    }
+  }
+
+  async function sendMessage(text) {
+    if (!text.trim() || loading) return
+
+    const userMsg = {
+      id: `u_${Date.now()}`,
+      role: 'user',
+      content: text,
+      createdAt: new Date().toISOString(),
+    }
+    setMessages(prev => [...prev, userMsg])
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, message: text }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Server error')
+
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `a_${Date.now()}`,
+          role: 'assistant',
+          content: data.response,
+          createdAt: new Date().toISOString(),
+        },
+      ])
+      loadTodos()
+    } catch (err) {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `e_${Date.now()}`,
+          role: 'assistant',
+          content: 'Connection error — make sure the server and Ollama are running.',
+          createdAt: new Date().toISOString(),
+          isError: true,
+        },
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function clearChat() {
+    try {
+      await fetch(`/api/messages/${sessionId}`, { method: 'DELETE' })
+      setMessages([])
+    } catch {
+      // silent
+    }
+  }
+
+  return (
+    <div className="h-screen flex flex-col bg-zinc-950 overflow-hidden">
+      <Header connected={connected} onClearChat={clearChat} />
+      <div className="flex flex-1 min-h-0">
+        <TodoSidebar todos={todos} />
+        <ChatWindow messages={messages} loading={loading} onSend={sendMessage} />
+      </div>
+    </div>
+  )
+}
