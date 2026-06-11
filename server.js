@@ -76,6 +76,28 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
+app.patch('/api/todos/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { status, todo } = req.body;
+        if (status !== undefined) await db.update(todosTable).set({ status }).where(eq(todosTable.id, id));
+        if (todo !== undefined) await db.update(todosTable).set({ todo }).where(eq(todosTable.id, id));
+        const [updated] = await db.select().from(todosTable).where(eq(todosTable.id, id));
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/todos/:id', async (req, res) => {
+    try {
+        await db.delete(todosTable).where(eq(todosTable.id, parseInt(req.params.id)));
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.delete('/api/messages/:sessionId', async (req, res) => {
     try {
         await db.delete(messagesTable).where(eq(messagesTable.sessionId, req.params.sessionId));

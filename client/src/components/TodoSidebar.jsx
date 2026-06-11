@@ -6,32 +6,54 @@ function CheckIcon() {
   )
 }
 
-function TodoItem({ todo }) {
+function DeleteIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+      <path d="M2 2l7 7M9 2l-7 7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function TodoItem({ todo, onToggle, onDelete }) {
   const done = todo.status === 'completed'
   return (
-    <div className={`flex items-start gap-2.5 px-4 py-2 hover:bg-gray-100 dark:hover:bg-zinc-800/40 transition-colors ${done ? 'opacity-40' : ''}`}>
-      {done ? (
-        <div className="mt-0.5 w-4 h-4 rounded-full bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center flex-shrink-0">
-          <CheckIcon />
-        </div>
-      ) : (
-        <div className="mt-0.5 w-4 h-4 rounded-full border border-gray-300 dark:border-zinc-600 flex-shrink-0" />
-      )}
+    <div className={`group flex items-start gap-2.5 px-4 py-2 hover:bg-gray-100 dark:hover:bg-zinc-800/40 transition-colors ${done ? 'opacity-50' : ''}`}>
+      {/* Toggle button */}
+      <button
+        onClick={() => onToggle(todo.id, todo.status)}
+        title={done ? 'Mark as pending' : 'Mark as completed'}
+        className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 transition-all ${
+          done
+            ? 'bg-emerald-500/15 border-emerald-500/40 hover:bg-emerald-500/25'
+            : 'border-gray-300 dark:border-zinc-600 hover:border-indigo-400 dark:hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10'
+        }`}
+      >
+        {done && <CheckIcon />}
+      </button>
+
+      {/* Text */}
       <div className="min-w-0 flex-1">
         <p className={`text-xs leading-5 truncate ${
-          done
-            ? 'text-gray-400 dark:text-zinc-500 line-through'
-            : 'text-gray-700 dark:text-zinc-300'
+          done ? 'text-gray-400 dark:text-zinc-500 line-through' : 'text-gray-700 dark:text-zinc-300'
         }`}>
           {todo.todo}
         </p>
         <span className="text-[10px] text-gray-400 dark:text-zinc-700 font-mono">#{todo.id}</span>
       </div>
+
+      {/* Delete — visible on hover */}
+      <button
+        onClick={() => onDelete(todo.id)}
+        title="Delete todo"
+        className="opacity-0 group-hover:opacity-100 mt-1 flex-shrink-0 text-gray-300 dark:text-zinc-700 hover:text-red-400 dark:hover:text-red-400 transition-all"
+      >
+        <DeleteIcon />
+      </button>
     </div>
   )
 }
 
-export default function TodoSidebar({ todos }) {
+export default function TodoSidebar({ todos, onToggle, onDelete }) {
   const pending = todos.filter(t => t.status !== 'completed')
   const completed = todos.filter(t => t.status === 'completed')
 
@@ -64,7 +86,9 @@ export default function TodoSidebar({ todos }) {
                 <p className="px-4 py-1.5 text-[10px] font-semibold text-gray-400 dark:text-zinc-700 uppercase tracking-widest">
                   Pending · {pending.length}
                 </p>
-                {pending.map(t => <TodoItem key={t.id} todo={t} />)}
+                {pending.map(t => (
+                  <TodoItem key={t.id} todo={t} onToggle={onToggle} onDelete={onDelete} />
+                ))}
               </div>
             )}
             {completed.length > 0 && (
@@ -72,7 +96,9 @@ export default function TodoSidebar({ todos }) {
                 <p className="px-4 py-1.5 text-[10px] font-semibold text-gray-400 dark:text-zinc-700 uppercase tracking-widest">
                   Done · {completed.length}
                 </p>
-                {completed.map(t => <TodoItem key={t.id} todo={t} />)}
+                {completed.map(t => (
+                  <TodoItem key={t.id} todo={t} onToggle={onToggle} onDelete={onDelete} />
+                ))}
               </div>
             )}
           </>

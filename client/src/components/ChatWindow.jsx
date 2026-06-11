@@ -68,6 +68,11 @@ export default function ChatWindow({ messages, loading, onSend }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
+  // Auto-focus after AI responds
+  useEffect(() => {
+    if (!loading) textareaRef.current?.focus()
+  }, [loading])
+
   useEffect(() => {
     const el = textareaRef.current
     if (!el) return

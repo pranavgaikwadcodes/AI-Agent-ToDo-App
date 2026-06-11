@@ -109,6 +109,29 @@ export default function App() {
     }
   }
 
+  async function toggleTodo(id, currentStatus) {
+    const newStatus = currentStatus === 'completed' ? 'pending' : 'completed'
+    setTodos(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t))
+    try {
+      await fetch(`/api/todos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+    } catch {
+      loadTodos()
+    }
+  }
+
+  async function deleteTodo(id) {
+    setTodos(prev => prev.filter(t => t.id !== id))
+    try {
+      await fetch(`/api/todos/${id}`, { method: 'DELETE' })
+    } catch {
+      loadTodos()
+    }
+  }
+
   async function clearChat() {
     try {
       await fetch(`/api/messages/${sessionId}`, { method: 'DELETE' })
@@ -127,7 +150,7 @@ export default function App() {
         onClearChat={clearChat}
       />
       <div className="flex flex-1 min-h-0">
-        <TodoSidebar todos={todos} />
+        <TodoSidebar todos={todos} onToggle={toggleTodo} onDelete={deleteTodo} />
         <ChatWindow messages={messages} loading={loading} onSend={sendMessage} />
       </div>
     </div>
