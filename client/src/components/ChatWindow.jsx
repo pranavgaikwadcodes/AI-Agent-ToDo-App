@@ -133,7 +133,7 @@ export default function ChatWindow({ messages, loading, onSend }) {
       </div>
 
       {/* Input bar */}
-      <div className="p-4 border-t border-gray-200 dark:border-zinc-800 flex-shrink-0">
+      <div className="p-4 flex-shrink-0">
         <form
           onSubmit={e => { e.preventDefault(); submit() }}
           className="flex items-end gap-2.5"
